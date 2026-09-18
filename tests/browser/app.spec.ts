@@ -160,3 +160,42 @@ test("controlled player starts, remains mounted across routes, and checkpoints",
   await page.getByRole("button", { name: "Pause", exact: true }).click();
   expect((await response).status()).toBe(200);
 });
+test("blocked YouTube videos explain the failure beside the controls and another track can play", async ({
+  page,
+}) => {
+  await page.route("https://www.youtube.com/iframe_api", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: `window.YT={Player:class{constructor(id,o){this.o=o;this.state=2;setTimeout(()=>o.events.onReady(),10)}setVolume(){}getCurrentTime(){return 0}getPlayerState(){return this.state}getPlaybackRate(){return 1}setPlaybackRate(){}loadVideoById(id){if(id==='fJ9rUzIMcZQ'){this.state=-1;this.o.events.onError({data:150})}else this.playVideo()}playVideo(){this.state=1;this.o.events.onStateChange({data:1})}pauseVideo(){this.state=2;this.o.events.onStateChange({data:2})}}};window.onYouTubeIframeAPIReady();`,
+    }),
+  );
+  await login(page);
+  await page
+    .getByRole("button", { name: "Play Bohemian Rhapsody", exact: true })
+    .first()
+    .click();
+  const bar = page.locator(".player-bar");
+  await expect(bar.getByRole("alert")).toContainText(
+    "owner does not allow playback",
+  );
+  await expect(bar.getByRole("alert")).toBeInViewport({ ratio: 1 });
+  await expect(
+    bar.getByRole("button", { name: "Video unavailable", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    bar.getByRole("link", { name: "Watch on YouTube" }),
+  ).toHaveAttribute("href", "https://www.youtube.com/watch?v=fJ9rUzIMcZQ");
+  await page
+    .getByRole("button", { name: "Play Faded", exact: true })
+    .first()
+    .click();
+  await expect(bar.getByRole("alert")).toHaveCount(0);
+  await expect(
+    bar.getByRole("button", { name: "Pause", exact: true }),
+  ).toBeEnabled();
+  await bar.getByRole("button", { name: "Pause", exact: true }).click();
+  await bar.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(
+    bar.getByRole("button", { name: "Pause", exact: true }),
+  ).toBeEnabled();
+});

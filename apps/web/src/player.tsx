@@ -15,6 +15,7 @@ import {
   Music2,
   ExternalLink,
   Radio,
+  CircleAlert,
 } from "lucide-react";
 import { type Song, mergeRanges, coverage } from "@resonance/shared";
 import { api, client } from "./api";
@@ -33,6 +34,7 @@ interface PlayerContext {
   volume: number;
   setVolume: (v: number) => void;
   ready: boolean;
+  unavailable: boolean;
 }
 const Context = createContext<PlayerContext>(null!);
 export const usePlayer = () => useContext(Context);
@@ -58,6 +60,7 @@ export function PlayerProvider({
     [error, setError] = useState(""),
     [volume, setVolume] = useState(70),
     [ready, setReady] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const song = queue[index];
   const yt = useRef<any>(null),
     session = useRef<any>(null),
@@ -132,7 +135,7 @@ export function PlayerProvider({
     client.invalidateQueries({ queryKey: ["/summary"] });
   };
   const change = async (offset: number, reason = "skip") => {
-    yt.current?.pauseVideo();
+    yt.current?.pauseVideo?.();
     await finish(reason);
     const current = queueRef.current;
     const next = current.index + offset;
@@ -167,7 +170,7 @@ export function PlayerProvider({
           })
           .catch((e) => {
             setError(e.message);
-            yt.current?.pauseVideo();
+            yt.current?.pauseVideo?.();
           })
           .finally(() => {
             starting.current = null;
@@ -177,8 +180,13 @@ export function PlayerProvider({
       if (state === 0) change(1, "ended");
     },
     error: (event: any) => {
+      setUnavailable(true);
       setError(
-        `This video cannot play here (YouTube ${event.data}). Try another track or open it on YouTube.`,
+        [101, 150].includes(event.data)
+          ? "This video's owner does not allow playback inside other apps. Open it on YouTube or choose another track."
+          : event.data === 100
+            ? "This YouTube video is private or no longer available. Choose another track."
+            : `YouTube could not play this video (error ${event.data}). Open it on YouTube or choose another track.`,
       );
       finish("interrupted");
       setPlaying(false);
@@ -199,7 +207,9 @@ export function PlayerProvider({
           onStateChange: (e: any) => callbacks.current.state(e.data),
           onError: (e: any) => callbacks.current.error(e),
           onAutoplayBlocked: () =>
-            setError("Your browser paused autoplay. Press play to continue."),
+            setError(
+              "Your browser blocked playback. Press Play inside the YouTube video to continue.",
+            ),
           onPlaybackRateChange: () => {
             if (yt.current.getPlaybackRate() !== 1)
               yt.current.setPlaybackRate(1);
@@ -212,12 +222,16 @@ export function PlayerProvider({
       window.onYouTubeIframeAPIReady = init;
       const script = document.createElement("script");
       script.src = "https://www.youtube.com/iframe_api";
+      script.onerror = () =>
+        setError(
+          "The YouTube player could not load. Check your connection or content blocker, then reload the page.",
+        );
       document.head.appendChild(script);
     }
     const timer = setInterval(() => sample(), 250),
       beat = setInterval(() => checkpoint().catch(() => {}), 10000);
     const hide = () => {
-      if (document.hidden) yt.current?.pauseVideo();
+      if (document.hidden) yt.current?.pauseVideo?.();
     };
     document.addEventListener("visibilitychange", hide);
     return () => {
@@ -230,6 +244,7 @@ export function PlayerProvider({
     songRef.current = song;
     if (song && ready) {
       setError("");
+      setUnavailable(false);
       setTime(0);
       yt.current.loadVideoById(song.media.videoId);
     }
@@ -239,9 +254,11 @@ export function PlayerProvider({
   }, [volume]);
   useEffect(() => {
     if (!user) {
-      yt.current?.pauseVideo();
+      yt.current?.pauseVideo?.();
       session.current = null;
       setQueue([]);
+      setError("");
+      setUnavailable(false);
     }
   }, [user?.userId]);
   const play = async (songs: Song[], i = 0, playlistId?: string) => {
@@ -249,7 +266,7 @@ export function PlayerProvider({
       onSignIn();
       return;
     }
-    yt.current?.pauseVideo();
+    yt.current?.pauseVideo?.();
     await finish("stopped");
     generation.current++;
     context.current = playlistId
@@ -257,12 +274,15 @@ export function PlayerProvider({
       : { type: "catalog" };
     setQueue(songs);
     setIndex(i);
-    if (song?.songId === songs[i]?.songId && ready)
+    if (song?.songId === songs[i]?.songId && ready) {
+      setUnavailable(false);
+      setError("");
       yt.current.loadVideoById(songs[i].media.videoId);
+    }
   };
   const toggle = () => {
-    if (!song) return;
-    if (playing) yt.current?.pauseVideo();
+    if (!song || !ready || unavailable) return;
+    if (playing) yt.current?.pauseVideo?.();
     else yt.current?.playVideo();
   };
   return (
@@ -280,6 +300,7 @@ export function PlayerProvider({
         volume,
         setVolume,
         ready,
+        unavailable,
       }}
     >
       {children}
@@ -321,11 +342,6 @@ export function PlayerRail() {
               Watch on YouTube <ExternalLink size={12} />
             </a>
           </div>
-          {p.error && (
-            <p className="notice" role="alert">
-              {p.error}
-            </p>
-          )}
           <div className="rail-divider" />
           <div className="section-heading">
             <h3>Up next</h3>
@@ -376,6 +392,21 @@ export function PlayerBar() {
   const p = usePlayer();
   return (
     <footer className="player-bar">
+      {p.error && (
+        <div className="player-feedback" role="alert">
+          <CircleAlert size={18} aria-hidden="true" />
+          <span>{p.error}</span>
+          {p.song && (
+            <a
+              href={"https://www.youtube.com/watch?v=" + p.song.media.videoId}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Watch on YouTube <ExternalLink size={14} />
+            </a>
+          )}
+        </div>
+      )}
       <div className="bar-track">
         <div className="mini-cover art-2">
           <Music2 size={22} />
@@ -399,11 +430,32 @@ export function PlayerBar() {
           </button>
           <button
             className="transport-play"
-            aria-label={p.playing ? "Pause" : "Play"}
-            disabled={!p.song}
+            aria-label={
+              p.unavailable
+                ? "Video unavailable"
+                : p.song && !p.ready
+                  ? "Loading YouTube player"
+                  : p.playing
+                    ? "Pause"
+                    : "Play"
+            }
+            title={
+              p.unavailable
+                ? "This video cannot be played here"
+                : !p.ready
+                  ? "Waiting for YouTube"
+                  : undefined
+            }
+            disabled={!p.song || !p.ready || p.unavailable}
             onClick={p.toggle}
           >
-            {p.playing ? <Pause size={19} /> : <Play size={19} />}
+            {p.unavailable ? (
+              <CircleAlert size={19} />
+            ) : p.playing ? (
+              <Pause size={19} />
+            ) : (
+              <Play size={19} />
+            )}
           </button>
           <button aria-label="Next track" disabled={!p.song} onClick={p.next}>
             <SkipForward size={18} />

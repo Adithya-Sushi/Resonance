@@ -11,7 +11,7 @@ Verified on 19 September 2026 (Asia/Kolkata). Machine: Apple M4, 10 logical CPUs
 | TypeScript and production build | Passed | Shared, API, worker and frontend; lazy admin bundle |
 | `npm test` | 28 passed | URL parsing, telemetry/seek coverage, playlist invariants, exact fixture topology and trend regression |
 | `npm run test:integration` | 41 passed | Real MongoDB replica-set transactions and separate Neo4j/GDS database |
-| `npm run test:e2e` | 10 passed | Five workflows each at desktop and mobile sizes in installed Chrome |
+| `npm run test:e2e` | 12 passed | Six workflows each at desktop and mobile sizes in installed Chrome |
 | axe WCAG 2 A/AA and 2.1 AA checks | No detected violations on tested pages | Discovery and login on both sizes; also keyboard focus trapping, Escape and focus restoration |
 | `npm run test:recovery` | Passed | Actual stop/start of isolated Neo4j service, durable writes, fallback, retry and replay |
 | `npm audit` | 0 reported vulnerabilities | Exact lockfile after security updates; point-in-time registry audit |
@@ -62,3 +62,7 @@ npx tsx scripts/http-check.ts
 ```
 
 Run integration and recovery sequentially: they intentionally share the isolated test graph on port 7688. Their MongoDB databases are separate from the playable `resonance` database. The HTTP check creates and deletes only its own temporary playlist. A full accessibility certification, broad browser matrix and high-concurrency stress testing remain beyond the recorded checks.
+
+## Playback failure regression
+
+The Queen video `fJ9rUzIMcZQ` returned YouTube error 150 during a live browser check: embedding was disallowed. Faded continued to play normally. The transport now disables playback for a failed video and places an explanation and YouTube link beside the controls. Desktop/mobile regression tests cover error 150, visible feedback, switching to a working song, and pause/resume. A selected song also waits for player readiness before enabling the transport.

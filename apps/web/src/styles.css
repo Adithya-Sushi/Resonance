@@ -1127,6 +1127,49 @@ nav a.active {
   z-index: 40;
   padding: 0 28px;
 }
+.player-feedback {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #28301f;
+  color: #f0f3e9;
+  border: 1px solid #96a48a;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px #0008;
+  font-size: 12px;
+}
+.player-feedback > svg {
+  flex-shrink: 0;
+}
+.player-feedback > span {
+  flex: 1;
+}
+.player-feedback a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #cef374;
+  text-decoration: underline;
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .player-feedback {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .player-feedback > span {
+    flex-basis: calc(100% - 30px);
+  }
+  .player-feedback a {
+    margin-left: 26px;
+  }
+}
 .bar-track {
   display: flex;
   gap: 12px;
