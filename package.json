@@ -1,0 +1,39 @@
+{
+  "name": "resonance",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web,worker \"npm run dev -w @resonance/api\" \"npm run dev -w @resonance/web\" \"npm run dev -w @resonance/worker\"",
+    "build": "npm run typecheck && npm run build -w @resonance/web",
+    "typecheck": "tsc --noEmit && npm run typecheck -w @resonance/web",
+    "test": "vitest run",
+    "test:integration": "INTEGRATION=1 vitest run tests/integration.test.ts tests/queries.integration.test.ts",
+    "test:e2e": "playwright test",
+    "seed": "tsx apps/api/src/seed.ts",
+    "fixtures": "tsx apps/api/src/seed.ts --fixtures",
+    "db:init": "tsx apps/api/src/init.ts",
+    "rebuild": "tsx apps/worker/src/index.ts --rebuild",
+    "benchmark": "tsx scripts/benchmark.ts",
+    "test:recovery": "tsx scripts/recovery-check.ts"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.56.1",
+    "@types/node": "24.10.0",
+    "@types/supertest": "6.0.3",
+    "concurrently": "9.2.4",
+    "prettier": "3.6.2",
+    "supertest": "7.1.4",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  },
+  "overrides": {
+    "vite": "7.3.6"
+  }
+}

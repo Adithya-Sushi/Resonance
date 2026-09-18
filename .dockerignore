@@ -1,0 +1,9 @@
+node_modules
+.env
+.git
+tmp
+output
+*.pdf
+.runtime
+test-results
+playwright-report

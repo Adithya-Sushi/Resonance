@@ -1,0 +1,14 @@
+services:
+  neo4j-test:
+    image: neo4j:5.26.0-community
+    environment:
+      NEO4J_AUTH: neo4j/resonance-local-password
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 128m
+      NEO4J_dbms_security_procedures_unrestricted: gds.*
+    ports: ["127.0.0.1:7688:7687"]
+    volumes: ["resonance_neo4j_plugins:/plugins:ro"]
+volumes:
+  resonance_neo4j_plugins:
+    external: true
