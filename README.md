@@ -63,6 +63,10 @@ Stop `npm run dev` before switching to Docker app services, since both use port 
 | `npm run test:integration` | Real MongoDB transaction and Neo4j/GDS checks in separate test databases |
 | `npm run test:e2e` | Desktop/mobile tests with Chrome, isolated API/database, and deterministic player adapter |
 | `npm run test:recovery` | Stop/restart only the isolated test Neo4j service and verify durable retry/recovery |
+| `npm run catalog:expand-demo` | Bring an existing demo to 70 tracks without resetting user data |
+| `npm run demo:simulate` | Opt-in ten-minute demo listener session with real playback, preferences, follows and recommendation checks |
+| `npm run demo:listen-full` | Opt-in 20-play, roughly 59-minute browser run; verifies complete real listening, with `-- --resume` support |
+| `node --import tsx scripts/verify-full-listening.ts` | Read-only verification of the completed run against MongoDB, Neo4j and recommendations |
 | `npm run catalog:refresh-demo` | Replace the original 14 blocked demo songs transactionally; keep Faded, accounts and history; update playlist entries |
 | `npx tsx scripts/check-demo-playback.ts` | Opt-in real YouTube playback/checkpoint check in Chrome; records short listens in the demo listener account |
 | `npm run fixtures` | Exact PDF fixtures in `resonance_fixtures`; no playable fictional songs |
@@ -83,4 +87,6 @@ Integration and browser tests create distinct `resonance_test_*` / `resonance_e2
 
 Read [Architecture](docs/architecture.md), [Query catalog](docs/queries.md), [Demo walkthrough](docs/demo.md), [Operations](docs/operations.md), and [Verification](docs/verification.md). Machine-readable API documentation is served at `/api/v1/openapi.json`.
 
-The current 15-song demo catalog and metadata sources are documented in [docs/demo-catalog.md](docs/demo-catalog.md). For an existing installation, run `npm run catalog:refresh-demo` after updating the source. This command does not reset the database. Refresh the browser to load the new catalog.
+The original 15-song demo catalog and metadata sources are documented in [docs/demo-catalog.md](docs/demo-catalog.md). Installations still using the original blocked videos can run `npm run catalog:refresh-demo` after updating the source. This command does not reset the database. Refresh the browser to load the new catalog.
+
+The catalog now contains **70 tracks**. See [the latest 20 songs and full listening demonstration](docs/catalog-70-and-full-listening.md) for metadata sources, safe update instructions, and the roughly 59-minute `npm run demo:listen-full` browser run. The [first 35-song expansion](docs/catalog-expansion.md) and its shorter listening demonstration remain documented separately.

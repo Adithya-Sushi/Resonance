@@ -314,15 +314,13 @@ export function SongTable({
   );
 }
 function Home() {
+  const [genre, setGenre] = useState("");
   const { user } = useAuth(),
-    songs = useApi("/songs?limit=15"),
+    songs = useApi("/songs?limit=15" + (genre ? "&genre=" + genre : "")),
     rec = useApi("/recommendations", !!user),
     genres = useApi<any[]>("/genres"),
     p = usePlayer();
-  const [genre, setGenre] = useState("");
-  const filtered = genre
-    ? (songs.data?.items || []).filter((s: Song) => s.genreIds.includes(genre))
-    : songs.data?.items || [];
+  const filtered = songs.data?.items || [];
   const first = filtered.slice(0, 4);
   return (
     <>
@@ -387,7 +385,7 @@ function Home() {
         >
           All music
         </button>
-        {genres.data?.slice(0, 6).map((g) => (
+        {genres.data?.map((g) => (
           <button
             key={g.genreId}
             className={genre === g.genreId ? "selected" : ""}
@@ -493,7 +491,14 @@ function SearchPage() {
           onChange={(e) => set("language", e.target.value)}
         >
           <option value="">All languages</option>
-          {["English", "Hindi", "Spanish", "Korean"].map((x) => (
+          {[
+            "English",
+            "Hindi",
+            "Spanish",
+            "Korean",
+            "Instrumental",
+            "Undetermined",
+          ].map((x) => (
             <option key={x}>{x}</option>
           ))}
         </select>

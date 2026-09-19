@@ -2,14 +2,30 @@ import { v5 } from "uuid";
 import { normalize, coverage } from "@resonance/shared";
 const NS = "f0ac4c84-e3b4-4c4e-a9cb-d72996fd1f1c";
 export const seedId = (x: string) => v5(x, NS);
-import { demoCatalog } from "./demo-catalog.js";
-export const demoSongId = (i: number) =>
-  seedId(i === 10 ? "real-song:10" : "demo-song:" + demoCatalog[i].videoId);
+import { demoCatalog, type DemoTrack } from "./demo-catalog.js";
+export const demoSongId = (
+  i: number,
+  catalog: readonly DemoTrack[] = demoCatalog,
+) =>
+  seedId(
+    catalog[i].videoId === "60ItHLz5WEA"
+      ? "real-song:10"
+      : "demo-song:" + catalog[i].videoId,
+  );
 const demoArtistId = (name: string) =>
   seedId(name === "Alan Walker" ? "real-artist:10" : "demo-artist:" + name);
-const demoAlbumId = (i: number) =>
-  seedId(i === 10 ? "real-album:10" : "demo-album:" + demoCatalog[i].videoId);
-export function seedData(fixture = false, passwordHash = "", now = new Date()) {
+const demoAlbumId = (i: number, catalog: readonly DemoTrack[]) =>
+  seedId(
+    catalog[i].videoId === "60ItHLz5WEA"
+      ? "real-album:10"
+      : "demo-album:" + catalog[i].videoId,
+  );
+export function seedData(
+  fixture = false,
+  passwordHash = "",
+  now = new Date(),
+  catalog: readonly DemoTrack[] = demoCatalog,
+) {
   const base = { status: "active", version: 1, createdAt: now, updatedAt: now };
   const names = [
     "Pop",
@@ -21,11 +37,22 @@ export function seedData(fixture = false, passwordHash = "", now = new Date()) {
     "Latin",
     "Alternative",
   ];
+  if (!fixture)
+    names.push(
+      ...new Set(
+        catalog
+          .flatMap((r) => [...r.genres])
+          .filter((name) => !names.includes(name)),
+      ),
+    );
   const genres = names.map((name) => ({
     ...base,
     genreId: seedId("genre:" + name),
     name,
-    slug: name.toLowerCase(),
+    slug: name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, ""),
   }));
   const users = Array.from({ length: 20 }, (_, i) => ({
     ...base,
@@ -54,17 +81,23 @@ export function seedData(fixture = false, passwordHash = "", now = new Date()) {
         bio: "Synthetic database test artist",
         country: "India",
       }))
-    : [
-        ...new Set(demoCatalog.flatMap((r) => r.artists.map((a) => a.name))),
-      ].map((name) => ({
-        ...base,
-        artistId: demoArtistId(name),
-        name,
-        searchName: normalize(name),
-        genreIds: [seedId("genre:Electronic")],
-        bio: "Explore their music on Resonance.",
-        country: "",
-      }));
+    : [...new Set(catalog.flatMap((r) => r.artists.map((a) => a.name)))].map(
+        (name) => ({
+          ...base,
+          artistId: demoArtistId(name),
+          name,
+          searchName: normalize(name),
+          genreIds: [
+            ...new Set(
+              catalog
+                .filter((r) => r.artists.some((a) => a.name === name))
+                .flatMap((r) => r.genres.map((g) => seedId("genre:" + g))),
+            ),
+          ],
+          bio: "Explore their music on Resonance.",
+          country: "",
+        }),
+      );
   const albums = fixture
     ? Array.from({ length: 30 }, (_, i) => ({
         ...base,
@@ -75,16 +108,16 @@ export function seedData(fixture = false, passwordHash = "", now = new Date()) {
         releaseDate: new Date(`${2018 + (i % 6)}-01-01`),
         type: "album",
       }))
-    : demoCatalog.map((r, i) => ({
+    : catalog.map((r, i) => ({
         ...base,
-        albumId: demoAlbumId(i),
+        albumId: demoAlbumId(i, catalog),
         title: r.album,
         searchTitle: normalize(r.album),
         artistIds: r.artists
           .filter((a) => a.role === "primary")
           .map((a) => demoArtistId(a.name)),
         releaseDate: new Date(r.releaseDate),
-        type: i === 10 ? "album" : "single",
+        type: r.videoId === "60ItHLz5WEA" ? "album" : "single",
         provenance: { source: r.releaseSource, retrievedAt: r.checkedAt },
       }));
   const songs = fixture
@@ -108,20 +141,20 @@ export function seedData(fixture = false, passwordHash = "", now = new Date()) {
         media: { provider: "fixture" },
         fixtureOnly: true,
       }))
-    : demoCatalog.map((r, i) => ({
+    : catalog.map((r, i) => ({
         ...base,
-        songId: demoSongId(i),
+        songId: demoSongId(i, catalog),
         title: r.title,
         searchTitle: normalize(r.title),
         artistCredits: r.artists.map((a) => ({
           artistId: demoArtistId(a.name),
           role: a.role,
         })),
-        albumId: demoAlbumId(i),
-        genreIds: [seedId("genre:Electronic")],
+        albumId: demoAlbumId(i, catalog),
+        genreIds: r.genres.map((g) => seedId("genre:" + g)),
         durationSec: r.durationSec,
         language: r.language,
-        trackNumber: i === 10 ? 15 : 1,
+        trackNumber: r.videoId === "60ItHLz5WEA" ? 15 : 1,
         discNumber: 1,
         media: { provider: "youtube", videoId: r.videoId },
         provenance: {

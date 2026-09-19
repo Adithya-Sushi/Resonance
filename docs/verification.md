@@ -10,14 +10,14 @@ Verified on 19 September 2026 (Asia/Kolkata). Machine: Apple M4, 10 logical CPUs
 | --- | --- | --- |
 | TypeScript and production build | Passed | Shared, API, worker and frontend; lazy admin bundle |
 | `npm test` | 28 passed | URL parsing, telemetry/seek coverage, playlist invariants, exact fixture topology and trend regression |
-| `npm run test:integration` | 44 passed | Real MongoDB replica-set transactions and separate Neo4j/GDS database |
-| `npm run test:e2e` | 12 passed | Six workflows each at desktop and mobile sizes in installed Chrome |
+| `npm run test:integration` | 48 passed | Real MongoDB replica-set transactions and separate Neo4j/GDS database |
+| `npm run test:e2e` | 14 passed | Seven workflows each at desktop and mobile sizes in installed Chrome |
 | axe WCAG 2 A/AA and 2.1 AA checks | No detected violations on tested pages | Discovery and login on both sizes; also keyboard focus trapping, Escape and focus restoration |
 | `npm run test:recovery` | Passed | Actual stop/start of isolated Neo4j service, durable writes, fallback, retry and replay |
 | `npm audit` | 0 reported vulnerabilities | Exact lockfile after security updates; point-in-time registry audit |
 | Docker Compose deployment | Passed | Built images, healthy databases, running API and single worker |
 
-The 44 database checks include all A1–A6 and C1–C10 queries compared with independent source calculations, real persisted **808 domain records / 228 graph nodes / 1,260 relationships**, GDS distinct-listener degree checks, and the seven-day case where **101 lifetime plays must produce only 1 recent play**. They also cover session/CSRF authorization, private playlists, conflicting playlist updates/deletion, invalid references, retirement, idempotent finalization, interrupted sessions, opt-out, analytics invalidation, deletion and repeated graph rebuilds.
+The 48 database checks include all A1–A6 and C1–C10 queries compared with independent source calculations, real persisted **808 domain records / 228 graph nodes / 1,260 relationships**, GDS distinct-listener degree checks, and the seven-day case where **101 lifetime plays must produce only 1 recent play**. They also cover session/CSRF authorization, private playlists, conflicting playlist updates/deletion, invalid references, retirement, idempotent finalization, interrupted sessions, opt-out, analytics invalidation, deletion and repeated graph rebuilds.
 
 Importer checks use controlled provider responses: playlist pagination, duplicate IDs, missing/private/non-embeddable videos, quota failure, resumability, recording/release conflicts, metadata enrichment, incomplete metadata, mixed publication outcomes, rollback, retry deduplication, and expired-cache removal while preserving authored information.
 
@@ -72,3 +72,21 @@ The Queen video `fJ9rUzIMcZQ` returned YouTube error 150 during a live browser c
 Three additional real MongoDB transaction tests cover preservation of Faded, historical song identity, playlist ordering and repeated entries; idempotent reruns; rollback on duplicate imported videos; and protection of manually customized original videos. The live migration inserted 14 songs, retired 14 originals, and changed 45 entries across 8 playlists. Accounts and existing playback-session documents were verified unchanged. A second run performed zero changes. Original artists/albums remain available for historical references; follows are not reassigned to unrelated artists.
 
 The post-migration real-provider check passed **15/15 tracks** in the Docker-served app at `http://127.0.0.1:4000`, using Chrome 153.0.8010.48 at 00:15 UTC on 19 September 2026. Each song advanced beyond three seconds and saved a successful nonzero listening checkpoint. No provider responses were mocked. Local details are in `tmp/demo-playback-check.json`; reproduce with `npx tsx scripts/check-demo-playback.ts`. The updated catalog also passed all 28 domain tests, 44 database tests and 12 desktop/mobile browser checks.
+
+## 50-track expansion
+
+The expansion adds 35 unique video IDs and preserves all 15 existing song identities. All 35 selected videos passed real IFrame playback checks. The additive migration and rollback checks passed, along with the original migration checks: 47 database checks total. All 28 domain tests and 14 desktop/mobile browser checks passed, including genre filtering beyond the first catalog page. The initial integration run found the isolated Neo4j service stopped; after starting that test service, the complete suite passed. The Docker production build and type checks passed. See [expansion and demo usage](catalog-expansion.md) for sources and reproduction commands.
+
+The new tracks also passed **35/35 real in-application playback checks** at 01:41 UTC on 19 September 2026 in Chrome 153.0.8010.48. Each advanced beyond three seconds and saved a nonzero checkpoint through the normal API. These checks used the admin demo account to keep the listener's taste demonstration separate. That run wrote `tmp/demo-playback-check.json`, which later checks overwrite; this paragraph records the historical 35-track result, and the 15-track result above describes the earlier run.
+
+Personalized ranking now preserves the first candidate’s position when the same song also appears in popularity or catalog fallback. A real MongoDB/Neo4j regression verifies followed-artist results precede preferred-genre results and retain their explanations. Previously, duplicate removal retained the explanation but reordered songs according to their later fallback positions.
+
+The demo listener recorded **604.52 seconds across seven real sessions**: three completions, two samples and two skips. All finalized successfully and matched Neo4j's absolute listening totals, with no pending or failed synchronization tasks. The initial final recommendation assertion exposed the ordering bug above; after deploying the tested fix, the live API and signed-in homepage showed five of five recommendations matching Electronic Rock/Chill. See the recorded demonstration in [catalog expansion](catalog-expansion.md) for the exact songs and evidence files. No listening totals were fabricated or replayed to repair the ranking.
+
+## Second catalog addition (70 songs)
+
+The second additive run inserted 20 songs and preserved the existing 50 song documents and all user activity. A new integration test verifies the 50-to-70 upgrade and its idempotent rerun; the full isolated suite passed **48 database tests**, plus **28 domain tests** and **14 desktop/mobile browser checks**. Type checks passed. All 20 additions passed real standalone iframe checks. In the first in-application run, 18 passed and two had startup timeouts without provider errors; both passed on a separate retry with successful nonzero checkpoints. Reports: `tmp/next-20-embeds.json`, `tmp/latest20-playback-first.json`, and `tmp/latest20-playback-retry.json`.
+
+The [70-song catalog and full listening demonstration](catalog-70-and-full-listening.md) documents all metadata sources and the normal-speed, full-length browser run.
+
+The requested full-length follow-up passed **20/20 real plays** across **13 distinct tracks**, recording **3,504.31 seconds (58:24)**, with **99.84% minimum coverage**. Every session ended naturally and finalized; no full-run retries or direct history writes were needed. MongoDB session identities, chronology, video/duration snapshots, and listening totals matched the independently recomputed Neo4j totals and affinities. All 2,431 outbox tasks were processed at verification. All five final recommendations matched the saved taste, and completed songs were excluded. The full run and read-only verification scripts both exited successfully. Detailed per-play evidence is in [the full listening report](catalog-70-and-full-listening.md).

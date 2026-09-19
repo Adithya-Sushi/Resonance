@@ -1,10 +1,10 @@
 import { collection, transaction, outbox } from "./db.js";
-import { demoCatalog } from "./demo-catalog.js";
+import { originalDemoCatalog as demoCatalog } from "./demo-catalog.js";
 import { demoSongId, seedData, seedId } from "./seed-data.js";
 
 /** Replace only the original demo videos, without resetting accounts or history. */
 export async function refreshDemoCatalog() {
-  const data = seedData();
+  const data = seedData(false, "", new Date(), demoCatalog);
   return transaction(async (session) => {
     const options = { session };
     const faded = await collection("songs").findOne(

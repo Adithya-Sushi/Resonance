@@ -253,6 +253,62 @@ describe.skipIf(!enabled)("real MongoDB replica set and isolated Neo4j", () => {
         ),
       ).toBe(true);
   });
+  it("keeps followed artists and preferred genres ahead of duplicate catalog candidates", async () => {
+    const chill = data.genres.find((g: any) => g.name === "Chill").genreId;
+    const clarx = data.artists.find((a: any) => a.name === "Clarx").artistId;
+    const { _id: userMongoId, ...userTemplate } = data.users[1];
+    const { _id: followMongoId, ...followTemplate } = data.follows[0];
+    const user = {
+      ...userTemplate,
+      userId: randomUUID(),
+      emailNormalized: "recommendation-order@example.test",
+      preferences: { genreIds: [chill] },
+    };
+    await collection("users").insertOne({ ...user });
+    await collection("follows").insertOne({
+      ...followTemplate,
+      followId: randomUUID(),
+      userId: user.userId,
+      artistId: clarx,
+    });
+    try {
+      await projectSnapshot();
+      const result = await recommendations(user);
+      expect(result.source).toBe("graph");
+      expect(new Set(result.items.map((s: any) => s.songId)).size).toBe(
+        result.items.length,
+      );
+      expect(
+        result.items
+          .slice(0, 4)
+          .map((s: any) => s.title)
+          .sort(),
+      ).toEqual([
+        "Gotta Leave",
+        "Left With Nothing",
+        "Round n' Round",
+        "Severed Rose",
+      ]);
+      expect(
+        result.items
+          .slice(0, 4)
+          .every((s: any) => s.reason === "From an artist you follow"),
+      ).toBe(true);
+      expect(
+        result.items
+          .slice(4, 9)
+          .every(
+            (s: any) =>
+              s.genreIds.includes(chill) &&
+              s.reason === "In your preferred genres",
+          ),
+      ).toBe(true);
+    } finally {
+      await collection("follows").deleteMany({ userId: user.userId });
+      await collection("users").deleteOne({ userId: user.userId });
+      await projectSnapshot();
+    }
+  });
   it("GDS algorithms run and publish timestamped results", async () => {
     await calculateAnalytics();
     const stats = await collection("app_state").findOne({
@@ -508,30 +564,28 @@ describe.skipIf(!enabled)("real MongoDB replica set and isolated Neo4j", () => {
       .set("X-CSRF-Token", token);
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockImplementation(
-          async (url: any) =>
-            new Response(
-              JSON.stringify(
-                String(url).includes("googleapis")
-                  ? {
-                      items: [
-                        {
-                          id: "private0001",
-                          status: { embeddable: true },
-                          snippet: {
-                            title: "Provider title",
-                            liveBroadcastContent: "none",
-                          },
-                          contentDetails: { duration: "PT3M" },
+      vi.fn().mockImplementation(
+        async (url: any) =>
+          new Response(
+            JSON.stringify(
+              String(url).includes("googleapis")
+                ? {
+                    items: [
+                      {
+                        id: "private0001",
+                        status: { embeddable: true },
+                        snippet: {
+                          title: "Provider title",
+                          liveBroadcastContent: "none",
                         },
-                      ],
-                    }
-                  : { recordings: [] },
-              ),
+                        contentDetails: { duration: "PT3M" },
+                      },
+                    ],
+                  }
+                : { recordings: [] },
             ),
-        ),
+          ),
+      ),
     );
     await processImport();
     const retried = await collection("import_jobs").findOne({ jobId });
