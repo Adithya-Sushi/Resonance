@@ -63,12 +63,14 @@ Stop `npm run dev` before switching to Docker app services, since both use port 
 | `npm run test:integration` | Real MongoDB transaction and Neo4j/GDS checks in separate test databases |
 | `npm run test:e2e` | Desktop/mobile tests with Chrome, isolated API/database, and deterministic player adapter |
 | `npm run test:recovery` | Stop/restart only the isolated test Neo4j service and verify durable retry/recovery |
+| `npm run catalog:refresh-demo` | Replace the original 14 blocked demo songs transactionally; keep Faded, accounts and history; update playlist entries |
+| `npx tsx scripts/check-demo-playback.ts` | Opt-in real YouTube playback/checkpoint check in Chrome; records short listens in the demo listener account |
 | `npm run fixtures` | Exact PDF fixtures in `resonance_fixtures`; no playable fictional songs |
 | `npm run rebuild` | Queue a rebuild for the existing worker |
 | `npm run benchmark` | Record catalog/recommendation latency and hardware in `docs/benchmark.json` |
 | `npm run seed -- --reset` | **Destructive:** replace domain data in the selected project database; explicit operator use only |
 
-Integration and browser tests create distinct `resonance_test_*` / `resonance_e2e_*` databases so they do not overwrite the demo. Tests leave their databases for inspection. Remove only test databases you no longer need using MongoDB tools. The test Neo4j database is disposable and separate from the demo graph.
+Integration and browser tests create distinct `resonance_test_*` / `resonance_e2e_*` databases so they do not overwrite the demo. Most tests leave their databases for inspection; catalog migration tests remove their own `resonance_catalog_test_*` database. Remove only test databases you no longer need using MongoDB tools. The test Neo4j database is disposable and separate from the demo graph.
 
 ## Project layout
 
@@ -80,3 +82,5 @@ Integration and browser tests create distinct `resonance_test_*` / `resonance_e2
 - `docs`: architecture, query contracts, API reference, operational instructions, and verification evidence.
 
 Read [Architecture](docs/architecture.md), [Query catalog](docs/queries.md), [Demo walkthrough](docs/demo.md), [Operations](docs/operations.md), and [Verification](docs/verification.md). Machine-readable API documentation is served at `/api/v1/openapi.json`.
+
+The current 15-song demo catalog and metadata sources are documented in [docs/demo-catalog.md](docs/demo-catalog.md). For an existing installation, run `npm run catalog:refresh-demo` after updating the source. This command does not reset the database. Refresh the browser to load the new catalog.

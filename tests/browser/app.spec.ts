@@ -68,12 +68,12 @@ test("discovery and prefix search work without horizontal overflow", async ({
     page.getByRole("heading", { name: "Find your frequency." }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Explore", exact: true }).click();
-  await page.getByLabel("Search catalog").fill("queen");
+  await page.getByLabel("Search catalog").fill("disfigure");
   await expect(
-    page.locator("strong").filter({ hasText: "Bohemian Rhapsody" }),
+    page.locator("strong").filter({ hasText: "Blank" }),
   ).toBeVisible();
   await expect(
-    page.locator("strong").filter({ hasText: "Counting Stars" }),
+    page.locator("strong").filter({ hasText: "Heroes Tonight" }),
   ).toHaveCount(0);
   expect(
     await page.evaluate(
@@ -166,12 +166,12 @@ test("blocked YouTube videos explain the failure beside the controls and another
   await page.route("https://www.youtube.com/iframe_api", (route) =>
     route.fulfill({
       contentType: "application/javascript",
-      body: `window.YT={Player:class{constructor(id,o){this.o=o;this.state=2;setTimeout(()=>o.events.onReady(),10)}setVolume(){}getCurrentTime(){return 0}getPlayerState(){return this.state}getPlaybackRate(){return 1}setPlaybackRate(){}loadVideoById(id){if(id==='fJ9rUzIMcZQ'){this.state=-1;this.o.events.onError({data:150})}else this.playVideo()}playVideo(){this.state=1;this.o.events.onStateChange({data:1})}pauseVideo(){this.state=2;this.o.events.onStateChange({data:2})}}};window.onYouTubeIframeAPIReady();`,
+      body: `window.YT={Player:class{constructor(id,o){this.o=o;this.state=2;setTimeout(()=>o.events.onReady(),10)}setVolume(){}getCurrentTime(){return 0}getPlayerState(){return this.state}getPlaybackRate(){return 1}setPlaybackRate(){}loadVideoById(id){if(id==='p7ZsBPK656s'){this.state=-1;this.o.events.onError({data:150})}else this.playVideo()}playVideo(){this.state=1;this.o.events.onStateChange({data:1})}pauseVideo(){this.state=2;this.o.events.onStateChange({data:2})}}};window.onYouTubeIframeAPIReady();`,
     }),
   );
   await login(page);
   await page
-    .getByRole("button", { name: "Play Bohemian Rhapsody", exact: true })
+    .getByRole("button", { name: "Play Blank", exact: true })
     .first()
     .click();
   const bar = page.locator(".player-bar");
@@ -184,7 +184,7 @@ test("blocked YouTube videos explain the failure beside the controls and another
   ).toBeDisabled();
   await expect(
     bar.getByRole("link", { name: "Watch on YouTube" }),
-  ).toHaveAttribute("href", "https://www.youtube.com/watch?v=fJ9rUzIMcZQ");
+  ).toHaveAttribute("href", "https://www.youtube.com/watch?v=p7ZsBPK656s");
   await page
     .getByRole("button", { name: "Play Faded", exact: true })
     .first()

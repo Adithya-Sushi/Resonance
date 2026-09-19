@@ -85,11 +85,11 @@ describe.skipIf(!enabled)("real MongoDB replica set and isolated Neo4j", () => {
     ).toBe(403);
   });
   it("prefix search and release-year filter hydrate authoritative names", async () => {
-    const r = await admin.get("/api/v1/songs?q=queen&year=1975");
+    const r = await admin.get("/api/v1/songs?q=disfigure&year=2013");
     expect(r.status).toBe(200);
     expect(r.body.items).toHaveLength(1);
-    expect(r.body.items[0].title).toBe("Bohemian Rhapsody");
-    expect(r.body.items[0].artists[0].name).toBe("Queen");
+    expect(r.body.items[0].title).toBe("Blank");
+    expect(r.body.items[0].artists[0].name).toBe("Disfigure");
   });
   it("creates private playlist and blocks other listener access", async () => {
     const r = await admin

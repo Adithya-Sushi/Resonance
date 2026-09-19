@@ -2,149 +2,13 @@ import { v5 } from "uuid";
 import { normalize, coverage } from "@resonance/shared";
 const NS = "f0ac4c84-e3b4-4c4e-a9cb-d72996fd1f1c";
 export const seedId = (x: string) => v5(x, NS);
-export const music = [
-  [
-    "Never Gonna Give You Up",
-    "Rick Astley",
-    "Whenever You Need Somebody",
-    "1987-11-16",
-    "dQw4w9WgXcQ",
-    213,
-    "English",
-    "Pop",
-  ],
-  [
-    "Shape of You",
-    "Ed Sheeran",
-    "÷",
-    "2017-03-03",
-    "JGwWNGJdvx8",
-    264,
-    "English",
-    "Pop",
-  ],
-  [
-    "Despacito",
-    "Luis Fonsi",
-    "Vida",
-    "2019-02-01",
-    "kJQP7kiw5Fk",
-    282,
-    "Spanish",
-    "Latin",
-  ],
-  [
-    "Bohemian Rhapsody",
-    "Queen",
-    "A Night at the Opera",
-    "1975-11-21",
-    "fJ9rUzIMcZQ",
-    360,
-    "English",
-    "Rock",
-  ],
-  [
-    "Uptown Funk",
-    "Mark Ronson",
-    "Uptown Special",
-    "2015-01-13",
-    "OPf0YbXqDm0",
-    271,
-    "English",
-    "Soul",
-  ],
-  [
-    "Sugar",
-    "Maroon 5",
-    "V",
-    "2014-08-29",
-    "09R8_2nJtjg",
-    302,
-    "English",
-    "Pop",
-  ],
-  [
-    "Counting Stars",
-    "OneRepublic",
-    "Native",
-    "2013-03-22",
-    "hT_nvWreIhg",
-    283,
-    "English",
-    "Indie",
-  ],
-  ["Hello", "Adele", "25", "2015-11-20", "YQHsXMglC9A", 367, "English", "Soul"],
-  [
-    "Roar",
-    "Katy Perry",
-    "Prism",
-    "2013-10-18",
-    "CevxZvSJLk8",
-    270,
-    "English",
-    "Pop",
-  ],
-  [
-    "Let Her Go",
-    "Passenger",
-    "All the Little Lights",
-    "2012-02-24",
-    "RBumgq5yVrA",
-    255,
-    "English",
-    "Acoustic",
-  ],
-  [
-    "Faded",
-    "Alan Walker",
-    "Different World",
-    "2018-12-14",
-    "60ItHLz5WEA",
-    213,
-    "English",
-    "Electronic",
-  ],
-  [
-    "Waka Waka (This Time for Africa)",
-    "Shakira",
-    "Sale el Sol",
-    "2010-10-19",
-    "pRpeEdMmmQ0",
-    211,
-    "English",
-    "Latin",
-  ],
-  [
-    "Numb",
-    "Linkin Park",
-    "Meteora",
-    "2003-03-25",
-    "kXYiU_JCYtU",
-    187,
-    "English",
-    "Rock",
-  ],
-  [
-    "Gangnam Style",
-    "PSY",
-    "PSY 6 (Six Rules), Part 1",
-    "2012-07-15",
-    "9bZkp7q19f0",
-    253,
-    "Korean",
-    "Pop",
-  ],
-  [
-    "Paradise",
-    "Coldplay",
-    "Mylo Xyloto",
-    "2011-10-24",
-    "1G4isv_Fylg",
-    261,
-    "English",
-    "Alternative",
-  ],
-] as const;
+import { demoCatalog } from "./demo-catalog.js";
+export const demoSongId = (i: number) =>
+  seedId(i === 10 ? "real-song:10" : "demo-song:" + demoCatalog[i].videoId);
+const demoArtistId = (name: string) =>
+  seedId(name === "Alan Walker" ? "real-artist:10" : "demo-artist:" + name);
+const demoAlbumId = (i: number) =>
+  seedId(i === 10 ? "real-album:10" : "demo-album:" + demoCatalog[i].videoId);
 export function seedData(fixture = false, passwordHash = "", now = new Date()) {
   const base = { status: "active", version: 1, createdAt: now, updatedAt: now };
   const names = [
@@ -190,12 +54,14 @@ export function seedData(fixture = false, passwordHash = "", now = new Date()) {
         bio: "Synthetic database test artist",
         country: "India",
       }))
-    : music.map((r, i) => ({
+    : [
+        ...new Set(demoCatalog.flatMap((r) => r.artists.map((a) => a.name))),
+      ].map((name) => ({
         ...base,
-        artistId: seedId("real-artist:" + i),
-        name: r[1],
-        searchName: normalize(r[1]),
-        genreIds: [genres.find((g) => g.name === r[7])!.genreId],
+        artistId: demoArtistId(name),
+        name,
+        searchName: normalize(name),
+        genreIds: [seedId("genre:Electronic")],
         bio: "Explore their music on Resonance.",
         country: "",
       }));
@@ -209,14 +75,17 @@ export function seedData(fixture = false, passwordHash = "", now = new Date()) {
         releaseDate: new Date(`${2018 + (i % 6)}-01-01`),
         type: "album",
       }))
-    : music.map((r, i) => ({
+    : demoCatalog.map((r, i) => ({
         ...base,
-        albumId: seedId("real-album:" + i),
-        title: r[2],
-        searchTitle: normalize(r[2]),
-        artistIds: [artists[i].artistId],
-        releaseDate: new Date(r[3]),
-        type: "album",
+        albumId: demoAlbumId(i),
+        title: r.album,
+        searchTitle: normalize(r.album),
+        artistIds: r.artists
+          .filter((a) => a.role === "primary")
+          .map((a) => demoArtistId(a.name)),
+        releaseDate: new Date(r.releaseDate),
+        type: i === 10 ? "album" : "single",
+        provenance: { source: r.releaseSource, retrievedAt: r.checkedAt },
       }));
   const songs = fixture
     ? Array.from({ length: 120 }, (_, i) => ({
@@ -239,22 +108,28 @@ export function seedData(fixture = false, passwordHash = "", now = new Date()) {
         media: { provider: "fixture" },
         fixtureOnly: true,
       }))
-    : music.map((r, i) => ({
+    : demoCatalog.map((r, i) => ({
         ...base,
-        songId: seedId("real-song:" + i),
-        title: r[0],
-        searchTitle: normalize(r[0]),
-        artistCredits: [{ artistId: artists[i].artistId, role: "primary" }],
-        albumId: albums[i].albumId,
-        genreIds: [genres.find((g) => g.name === r[7])!.genreId],
-        durationSec: r[5],
-        language: r[6],
-        trackNumber: 1,
+        songId: demoSongId(i),
+        title: r.title,
+        searchTitle: normalize(r.title),
+        artistCredits: r.artists.map((a) => ({
+          artistId: demoArtistId(a.name),
+          role: a.role,
+        })),
+        albumId: demoAlbumId(i),
+        genreIds: [seedId("genre:Electronic")],
+        durationSec: r.durationSec,
+        language: r.language,
+        trackNumber: i === 10 ? 15 : 1,
         discNumber: 1,
-        media: { provider: "youtube", videoId: r[4] },
+        media: { provider: "youtube", videoId: r.videoId },
         provenance: {
           catalog: "curated-demo",
-          duration: "video duration; verify in player",
+          source: r.source,
+          retrievedAt: r.checkedAt,
+          duration: "YouTube IFrame player duration, rounded to seconds",
+          embedPlaybackCheckedAt: r.checkedAt,
         },
       }));
   const playlists = Array.from({ length: fixture ? 30 : 8 }, (_, i) => ({
