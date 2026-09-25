@@ -1011,16 +1011,18 @@ export async function recommendations(user: any) {
       reason: "Discover the catalog",
     })),
   );
-  const unique = [
-    ...new Map(
-      candidates
-        .filter(
-          (x) => !user.privacy.recommendationOptIn || !heard.has(x.songId),
-        )
-        .reverse()
-        .map((x) => [x.songId, x]),
-    ).values(),
-  ].reverse();
+  // Keep the first occurrence's rank and reason. A later popularity/catalog
+  // duplicate must not move a personalized candidate down the list.
+  const seen = new Set<string>();
+  const unique = candidates.filter((candidate) => {
+    if (
+      seen.has(candidate.songId) ||
+      (user.privacy.recommendationOptIn && heard.has(candidate.songId))
+    )
+      return false;
+    seen.add(candidate.songId);
+    return true;
+  });
   const rows = await hydrateSongs(
     await collection("songs")
       .find({

@@ -12,7 +12,7 @@
     "build": "npm run typecheck && npm run build -w @resonance/web",
     "typecheck": "tsc --noEmit && npm run typecheck -w @resonance/web",
     "test": "vitest run",
-    "test:integration": "INTEGRATION=1 vitest run tests/integration.test.ts tests/queries.integration.test.ts tests/catalog-refresh.integration.test.ts",
+    "test:integration": "INTEGRATION=1 vitest run tests/integration.test.ts tests/queries.integration.test.ts tests/catalog-refresh.integration.test.ts tests/catalog-expansion.integration.test.ts",
     "test:e2e": "playwright test",
     "seed": "tsx apps/api/src/seed.ts",
     "fixtures": "tsx apps/api/src/seed.ts --fixtures",
@@ -20,7 +20,10 @@
     "rebuild": "tsx apps/worker/src/index.ts --rebuild",
     "benchmark": "tsx scripts/benchmark.ts",
     "test:recovery": "tsx scripts/recovery-check.ts",
-    "catalog:refresh-demo": "tsx scripts/refresh-demo-catalog.ts"
+    "catalog:refresh-demo": "tsx scripts/refresh-demo-catalog.ts",
+    "catalog:expand-demo": "tsx scripts/expand-demo-catalog.ts",
+    "demo:simulate": "tsx scripts/simulate-demo-listener.ts",
+    "demo:listen-full": "tsx scripts/listen-full-demo.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.2",

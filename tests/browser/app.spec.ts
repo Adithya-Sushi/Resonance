@@ -118,6 +118,28 @@ test("listener creates playlist, adds repeated song and sees saved history", asy
     page.getByRole("heading", { name: "Recently played", exact: true }),
   ).toBeVisible();
 });
+test("genre discovery reaches songs beyond the initial catalog page", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "House", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Play Moonlight", exact: true }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Play Blank", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("link", { name: "Explore", exact: true }).click();
+  await page
+    .getByLabel("Genre", { exact: true })
+    .selectOption({ label: "Electronic Rock" });
+  await expect(
+    page.getByRole("button", { name: "Play Severed Rose", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Play Faded", exact: true }),
+  ).toHaveCount(0);
+});
 test("admin import clearly explains missing API configuration", async ({
   page,
 }) => {
@@ -144,6 +166,8 @@ test("controlled player starts, remains mounted across routes, and checkpoints",
     }),
   );
   await login(page);
+  await page.getByRole("link", { name: "Explore", exact: true }).click();
+  await page.getByLabel("Search catalog").fill("Faded");
   await page
     .getByRole("button", { name: "Play Faded", exact: true })
     .first()
@@ -170,6 +194,8 @@ test("blocked YouTube videos explain the failure beside the controls and another
     }),
   );
   await login(page);
+  await page.getByRole("link", { name: "Explore", exact: true }).click();
+  await page.getByLabel("Search catalog").fill("Blank");
   await page
     .getByRole("button", { name: "Play Blank", exact: true })
     .first()
@@ -185,6 +211,7 @@ test("blocked YouTube videos explain the failure beside the controls and another
   await expect(
     bar.getByRole("link", { name: "Watch on YouTube" }),
   ).toHaveAttribute("href", "https://www.youtube.com/watch?v=p7ZsBPK656s");
+  await page.getByLabel("Search catalog").fill("Faded");
   await page
     .getByRole("button", { name: "Play Faded", exact: true })
     .first()

@@ -1,7 +1,27 @@
 // Curated music credits and label release dates; upload dates are not release dates.
 // Playback was checked with the official YouTube IFrame API; availability can change.
-export const demoCatalog = [
+import { catalogAdditions } from "./catalog-additions.js";
+import { additionalTwenty } from "./catalog-additions-20.js";
+export interface DemoTrack {
+  readonly title: string;
+  readonly artists: readonly {
+    readonly name: string;
+    readonly role: "primary" | "featured";
+  }[];
+  readonly album: string;
+  readonly releaseDate: string;
+  readonly videoId: string;
+  readonly durationSec: number;
+  readonly language: string;
+  readonly source: string;
+  readonly releaseSource: string;
+  readonly checkedAt: string;
+  readonly legacyVideoId?: string;
+  readonly genres: readonly string[];
+}
+export const originalDemoCatalog: readonly DemoTrack[] = [
   {
+    genres: ["Electronic"],
     title: "Invincible",
     artists: [
       {
@@ -20,6 +40,7 @@ export const demoCatalog = [
     legacyVideoId: "dQw4w9WgXcQ",
   },
   {
+    genres: ["Electronic"],
     title: "Blank",
     artists: [
       {
@@ -38,6 +59,7 @@ export const demoCatalog = [
     legacyVideoId: "JGwWNGJdvx8",
   },
   {
+    genres: ["Electronic"],
     title: "On & On",
     artists: [
       {
@@ -64,6 +86,7 @@ export const demoCatalog = [
     legacyVideoId: "kJQP7kiw5Fk",
   },
   {
+    genres: ["Electronic"],
     title: "Heroes Tonight",
     artists: [
       {
@@ -86,6 +109,7 @@ export const demoCatalog = [
     legacyVideoId: "fJ9rUzIMcZQ",
   },
   {
+    genres: ["Electronic"],
     title: "Sky High",
     artists: [
       {
@@ -104,6 +128,7 @@ export const demoCatalog = [
     legacyVideoId: "OPf0YbXqDm0",
   },
   {
+    genres: ["Electronic"],
     title: "Feel Good",
     artists: [
       {
@@ -122,6 +147,7 @@ export const demoCatalog = [
     legacyVideoId: "09R8_2nJtjg",
   },
   {
+    genres: ["Electronic"],
     title: "Firefly",
     artists: [
       {
@@ -140,6 +166,7 @@ export const demoCatalog = [
     legacyVideoId: "hT_nvWreIhg",
   },
   {
+    genres: ["Electronic"],
     title: "My Heart",
     artists: [
       {
@@ -162,6 +189,7 @@ export const demoCatalog = [
     legacyVideoId: "YQHsXMglC9A",
   },
   {
+    genres: ["Electronic"],
     title: "Mortals",
     artists: [
       {
@@ -184,6 +212,7 @@ export const demoCatalog = [
     legacyVideoId: "CevxZvSJLk8",
   },
   {
+    genres: ["Electronic"],
     title: "Shine",
     artists: [
       {
@@ -202,6 +231,7 @@ export const demoCatalog = [
     legacyVideoId: "RBumgq5yVrA",
   },
   {
+    genres: ["Electronic"],
     title: "Faded",
     artists: [
       {
@@ -220,6 +250,7 @@ export const demoCatalog = [
     legacyVideoId: "60ItHLz5WEA",
   },
   {
+    genres: ["Electronic"],
     title: "Nekozilla",
     artists: [
       {
@@ -238,6 +269,7 @@ export const demoCatalog = [
     legacyVideoId: "pRpeEdMmmQ0",
   },
   {
+    genres: ["Electronic"],
     title: "Symbolism",
     artists: [
       {
@@ -256,6 +288,7 @@ export const demoCatalog = [
     legacyVideoId: "kXYiU_JCYtU",
   },
   {
+    genres: ["Electronic"],
     title: "Link",
     artists: [
       {
@@ -274,6 +307,7 @@ export const demoCatalog = [
     legacyVideoId: "9bZkp7q19f0",
   },
   {
+    genres: ["Electronic"],
     title: "Why We Lose",
     artists: [
       {
@@ -299,4 +333,9 @@ export const demoCatalog = [
     checkedAt: "2026-09-19T00:08:47.203Z",
     legacyVideoId: "1G4isv_Fylg",
   },
-] as const;
+];
+export const demoCatalog: readonly DemoTrack[] = [
+  ...originalDemoCatalog,
+  ...catalogAdditions,
+  ...additionalTwenty,
+];

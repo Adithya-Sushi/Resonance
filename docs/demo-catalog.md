@@ -1,4 +1,6 @@
-# Playable demo catalog
+# Original playable demo catalog
+
+The application now contains **50 tracks**. This page documents the first 15; see [35-track expansion](catalog-expansion.md) for the additions and listener demonstration.
 
 The seed contains Faded plus 14 replacement tracks checked on 19 September 2026. Music streams only through the visible official YouTube player. No media is stored locally.
 

@@ -4,7 +4,9 @@ const { collection, initDb, closeDb, db } = await import(
   "../apps/api/src/db.js"
 );
 const { seedData, seedId } = await import("../apps/api/src/seed-data.js");
-const { demoCatalog } = await import("../apps/api/src/demo-catalog.js");
+const { originalDemoCatalog: demoCatalog } = await import(
+  "../apps/api/src/demo-catalog.js"
+);
 const { refreshDemoCatalog } = await import(
   "../apps/api/src/refresh-demo-catalog.js"
 );
@@ -25,7 +27,7 @@ describe.skipIf(process.env.INTEGRATION !== "1")(
         "app_state",
       ])
         await collection(name).deleteMany({});
-      const data = seedData();
+      const data = seedData(false, "", new Date(), demoCatalog);
       const oldIds = new Map(
         data.songs.map((song, i) => [song.songId, seedId("real-song:" + i)]),
       );
@@ -107,7 +109,7 @@ describe.skipIf(process.env.INTEGRATION !== "1")(
     });
 
     it("rolls back all changes if a replacement video was already imported under another identity", async () => {
-      const song = seedData().songs[5];
+      const song = seedData(false, "", new Date(), demoCatalog).songs[5];
       await collection("songs").insertOne({
         ...song,
         songId: seedId("custom-import"),
